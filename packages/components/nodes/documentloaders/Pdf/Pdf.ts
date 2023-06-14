@@ -65,59 +65,36 @@ class Pdf_DocumentLoaders implements INode {
         const usage = nodeData.inputs?.usage as string
         const metadata = nodeData.inputs?.metadata
 
-        let alldocs = []
-        let files: string[] = []
+        const files: string[] = pdfFileBase64.startsWith('[') && pdfFileBase64.endsWith(']') ? JSON.parse(pdfFileBase64) : [pdfFileBase64]
 
-        if (pdfFileBase64.startsWith('[') && pdfFileBase64.endsWith(']')) {
-            files = JSON.parse(pdfFileBase64)
-        } else {
-            files = [pdfFileBase64]
-        }
+        const alldocs = await Promise.all(
+            files.map(async (file) => {
+                const splitDataURI = file.split(',')
+                splitDataURI.pop()
+                const bf = Buffer.from(splitDataURI.pop() || '', 'base64')
+                const blob = new Blob([bf])
 
-        for (const file of files) {
-            const splitDataURI = file.split(',')
-            splitDataURI.pop()
-            const bf = Buffer.from(splitDataURI.pop() || '', 'base64')
-            if (usage === 'perFile') {
-                const loader = new PDFLoader(new Blob([bf]), {
-                    splitPages: false,
+                const loader = new PDFLoader(blob, {
+                    splitPages: usage === 'perFile' ? false : undefined,
                     // @ts-ignore
                     pdfjs: () => import('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js')
                 })
-                if (textSplitter) {
-                    const docs = await loader.loadAndSplit(textSplitter)
-                    alldocs.push(...docs)
-                } else {
-                    const docs = await loader.load()
-                    alldocs.push(...docs)
-                }
-            } else {
-                // @ts-ignore
-                const loader = new PDFLoader(new Blob([bf]), { pdfjs: () => import('pdf-parse/lib/pdf.js/v1.10.100/build/pdf.js') })
-                if (textSplitter) {
-                    const docs = await loader.loadAndSplit(textSplitter)
-                    alldocs.push(...docs)
-                } else {
-                    const docs = await loader.load()
-                    alldocs.push(...docs)
-                }
-            }
-        }
+                return textSplitter ? await loader.loadAndSplit(textSplitter) : await loader.load()
+            })
+        )
 
         if (metadata) {
             const parsedMetadata = typeof metadata === 'object' ? metadata : JSON.parse(metadata)
-            let finaldocs = []
-            for (const doc of alldocs) {
-                const newdoc = {
+            return alldocs.map((doc) => {
+                return {
                     ...doc,
                     metadata: {
+                        // @ts-ignore-next-line
                         ...doc.metadata,
                         ...parsedMetadata
                     }
                 }
-                finaldocs.push(newdoc)
-            }
-            return finaldocs
+            })
         }
 
         return alldocs
