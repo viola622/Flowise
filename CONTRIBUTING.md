@@ -120,6 +120,7 @@ Flowise has 3 different modules in a single mono repository.
 
 Flowise support different environment variables to configure your instance. You can specify the following variables in the `.env` file inside `packages/server` folder. Read [more](https://docs.flowiseai.com/environment-variables)
 
+
 | Variable                    | Description                                                                  | Type                                             | Default                             |
 | --------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------- |
 | PORT                        | The HTTP port Flowise runs on                                                | Number                                           | 3000                                |
@@ -138,8 +139,10 @@ Flowise support different environment variables to configure your instance. You 
 | DATABASE_USER               | Database username (When DATABASE_TYPE is not sqlite)                         | String                                           |                                     |
 | DATABASE_PASSWORD           | Database password (When DATABASE_TYPE is not sqlite)                         | String                                           |                                     |
 | DATABASE_NAME               | Database name (When DATABASE_TYPE is not sqlite)                             | String                                           |                                     |
+| PG_CERT_BASE64              | Base64 encoded certificate (When DATABASE_TYPE is  postgres)                 | String                                           |                                     |
 | SECRETKEY_PATH              | Location where encryption key (used to encrypt/decrypt credentials) is saved | String                                           | `your-path/Flowise/packages/server` |
 | FLOWISE_SECRETKEY_OVERWRITE | Encryption key to be used instead of the key stored in SECRETKEY_PATH        | String                                           |
+
 
 You can also specify the env variables when using `npx`. For example:
 
